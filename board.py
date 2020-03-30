@@ -22,14 +22,9 @@ class Square:
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
-           
 
-class Move:
-
-    def __init__(self, piece: Piece, start: Square, end: Square) -> None:
-        self.piece = piece
-        self.start = start
-        self.end = end
+    def __repr__(self):
+        return "(%s, %s)" % (self.x, self.y)
 
 
 class Piece:
@@ -57,7 +52,19 @@ class Piece:
         return self.size >= other.size
 
     def __repr__(self):
-        return "(%s, %s)" % (self.size, self.color)
+        return "Piece(%s, %s)" % (self.size, self.color)
+
+
+class Move:
+
+    def __init__(self, piece: Piece, start: Square, end: Square) -> None:
+        self.piece = piece
+        self.start = start
+        self.end = end
+
+    def __repr__(self):
+        return "Move(%s, %s, %s)" % (self.piece, self.start, self.end)
+
 
 class Board:
     def __init__(self) -> None:
@@ -79,25 +86,23 @@ class Board:
             self.lines.append(horizontal_line)
             self.lines.append(vertical_line)
             major_diagonal.append([i, i])
-            minor_diagonal.append([size - 1 - i, i])
+            minor_diagonal.append([self.size - 1 - i, i])
         self.lines.append(major_diagonal)
         self.lines.append(minor_diagonal)
-
 
     def place_piece(self, from_tile: Tuple[int, int],
                     to: Tuple[int, int],
                     piece: Piece) -> None:
         if not can_place_piece(from_tile, to, piece):
             raise ValueError(
-                    "Can't place piece {} from {} to {}".format(piece, from_tile, to))
-    
+                "Can't place piece {} from {} to {}".format(piece, from_tile, to))
+
         player = self.players[color]
         if from_tile is None:
             player.consume_piece(piece.size)
         else:
             state[from_tile] = state[from_tile][1:]
         state[to] = state[to].insert(0, piece)
-
 
     def size_available(self, color: str, size: int) -> bool:
         return self.players[color].available_pieces[size] > 0
@@ -120,10 +125,9 @@ class Board:
             # at the top of it's stack
             if state[from_tile] == [] or state[from_tile] != piece:
                 return False
-        
+
         return True
 
- 
     def find_winner(self) -> str:
         has_winner = False
         for line in self.lines:
@@ -141,30 +145,30 @@ class Board:
     def get_number_on_line(self, color: str, line: List[List[int]]):
         pass
 
-    def available_moves(self, color: str) -> List[Move]:
-        available_moves = []
-        player = self.players[color]
-        for ix, iy in np.ndindex(self.state.shape):
-            tile = self.state[ix][iy]
-            top_size = top_size(tile)
-            for size, available in player.available_pieces.items():
-                if top_size >= size:
-                    continue
-                if available > 0:
-                    available_moves.append(Move(Piece(size, color), None, Square(ix, iy)))
-            if tile == []:
-                continue
-            for iix, iiy in np.ndindex(self.state.shape):
-                if iix != ix and iiy != iy:
-                    end_tile = self.state[iix][iiy]
-                    if top_size(end_tile) < top_size:
-                        available_moves.append(Move(tile[0], Square(ix, iy), Square(iix, iiy)))
-        return available_moves
-
-
-    def top_size(self, tile: List[Piece]) -> int:
-        if tile == []:
+    def largest_size_on_tile(self, tile: List[Piece]) -> int:
+        if not tile:
             return 0
         else:
             return tile[0].size
 
+    def available_moves(self, color: str) -> List[Move]:
+        available_moves = []
+        player = self.players[color]
+        for ix, iy in np.ndindex(self.state.shape[0:2]):
+            tile = self.state[ix][iy]
+            top_size = self.largest_size_on_tile(tile)
+            for size, available in player.available_pieces.items():
+                if top_size >= size:
+                    continue
+                if available > 0:
+                    available_moves.append(
+                        Move(Piece(size, color), None, Square(ix, iy)))
+            if not tile:
+                continue
+            for iix, iiy in np.ndindex(self.state.shape[0:2]):
+                if iix != ix and iiy != iy:
+                    end_tile = self.state[iix][iiy]
+                    if top_size(end_tile) < top_size:
+                        available_moves.append(
+                            Move(tile[0], Square(ix, iy), Square(iix, iiy)))
+        return available_moves
