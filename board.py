@@ -1,6 +1,37 @@
 import numpy as np
 from typing import List, Tuple
 
+
+class Player:
+
+    def __init__(self, color: str) -> None:
+        self.color = color
+
+    board_memory = np.array([[[], [], []],
+                             [[], [], []],
+                             [[], [], []]])
+
+    available_pieces = {3: 2, 2: 2, 1: 2}
+
+    def consume_piece(self, size):
+        available_pieces[size] -= 1
+
+
+class Square:
+
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+           
+
+class Move:
+
+    def __init__(self, piece: Piece, start: Square, end: Square) -> None:
+        self.piece = piece
+        self.start = start
+        self.end = end
+
+
 class Piece:
 
     def __init__(self, size: int, color: str) -> None:
@@ -105,21 +136,35 @@ class Board:
         return line[0][0].color == line[1][0].color == line[2][0].color
 
     def has_winning_move(self, color: str) -> bool:
-        for line in self.lines:
-          break  
-     def get_number_on_line(self, color: str, line: List[List[int]]):
+        pass
+
+    def get_number_on_line(self, color: str, line: List[List[int]]):
+        pass
+
+    def available_moves(self, color: str) -> List[Move]:
+        available_moves = []
+        player = self.players[color]
+        for ix, iy in np.ndindex(self.state.shape):
+            tile = self.state[ix][iy]
+            top_size = top_size(tile)
+            for size, available in player.available_pieces.items():
+                if top_size >= size:
+                    continue
+                if available > 0:
+                    available_moves.append(Move(Piece(size, color), None, Square(ix, iy)))
+            if tile == []:
+                continue
+            for iix, iiy in np.ndindex(self.state.shape):
+                if iix != ix and iiy != iy:
+                    end_tile = self.state[iix][iiy]
+                    if top_size(end_tile) < top_size:
+                        available_moves.append(Move(tile[0], Square(ix, iy), Square(iix, iiy)))
+        return available_moves
 
 
-class Player:
+    def top_size(self, tile: List[Piece]) -> int:
+        if tile == []:
+            return 0
+        else:
+            return tile[0].size
 
-    def __init__(self, color: str) -> None:
-        self.color = color
-
-    board_memory = np.array([[[], [], []],
-                             [[], [], []],
-                             [[], [], []]])
-
-    available_pieces = {3: 2, 2: 2, 1: 2}
-
-    def consume_piece(self, size):
-        available_pieces[size] -= 1

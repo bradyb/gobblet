@@ -14,3 +14,7 @@
  How to compute the value?
   1. the number of winning branches under the node?
   2. the percentage of winning branches under the node 
+ 
+ TODO:
+  1. Available moves method - will make tree creation much simpler
+  2. Tree searcher for determining the value of each node.
